@@ -1,0 +1,45 @@
+# ──────────────────────────────────────────────────────────────
+#  Morgendruck: Termine des Tages auf dem Phomemo T02
+#  Ablage:  /config/packages/morgendruck_termine.yaml
+#
+#  Voraussetzung in configuration.yaml:
+#    homeassistant:
+#      packages: !include_dir_named packages
+#
+#  Anpassen: Kalender-Entitäten (calendar.…) und Uhrzeit.
+# ──────────────────────────────────────────────────────────────
+
+input_boolean:
+  morgendruck_aktiv:
+    name: Morgendruck Termine aktiv
+    icon: mdi:printer-pos
+
+script:
+  termine_jetzt_drucken:
+    alias: Termine jetzt drucken
+    icon: mdi:calendar-today
+    sequence:
+      - action: phomemo_t02.print_calendar
+        data:
+          entity_id:
+            - calendar.mein_kalender      # <- eigener Terminkalender
+            - calendar.abfall             # <- Abfallkalender (optional)
+          preview_entity_id:
+            - calendar.abfall             # Abfuhr von morgen extra anzeigen (optional)
+          preview_days: 1
+          show_location: true
+          skip_if_empty: false
+
+automation:
+  - id: morgendruck_termine
+    alias: Morgendruck – Termine des Tages
+    mode: single
+    triggers:
+      - trigger: time
+        at: "06:30:00"                    # <- Uhrzeit anpassen
+    conditions:
+      - condition: state
+        entity_id: input_boolean.morgendruck_aktiv
+        state: "on"
+    actions:
+      - action: script.termine_jetzt_drucken

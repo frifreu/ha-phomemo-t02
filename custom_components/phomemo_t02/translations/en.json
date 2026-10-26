@@ -1,0 +1,12 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {"title": "Add Phomemo T02", "data": {"address": "Printer"}},
+      "manual": {"title": "MAC address", "description": "Format AA:BB:CC:DD:EE:FF", "data": {"address": "MAC address"}},
+      "confirm": {"description": "Set up {name}?"}
+    },
+    "error": {"invalid_mac": "Invalid MAC address"},
+    "abort": {"already_configured": "Printer is already configured"}
+  }
+}

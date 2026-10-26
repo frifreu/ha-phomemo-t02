@@ -1,0 +1,12 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {"title": "Phomemo T02 hinzufügen", "data": {"address": "Drucker"}},
+      "manual": {"title": "MAC-Adresse", "description": "Format AA:BB:CC:DD:EE:FF", "data": {"address": "MAC-Adresse"}},
+      "confirm": {"description": "{name} einrichten?"}
+    },
+    "error": {"invalid_mac": "Ungültige MAC-Adresse"},
+    "abort": {"already_configured": "Drucker ist bereits eingerichtet"}
+  }
+}

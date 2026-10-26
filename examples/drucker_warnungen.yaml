@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────────────────────────
+#  Warnungen: Akku schwach oder Papier leer
+#  Ablage:  /config/packages/drucker_warnungen.yaml
+#
+#  Anpassen:
+#   - notify.mobile_app_mein_handy  -> eigener Benachrichtigungsdienst
+#   - Entitäts-IDs, falls der Drucker anders heißt als "T02"
+# ──────────────────────────────────────────────────────────────
+
+automation:
+  - id: t02_akku_schwach
+    alias: T02 – Akku schwach
+    mode: single
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.t02_akku
+        below: 20
+    actions:
+      - action: notify.mobile_app_mein_handy
+        data:
+          title: "Drucker: Akku schwach"
+          message: "Der T02 hat nur noch {{ states('sensor.t02_akku') }} %. Bitte laden."
+
+  - id: t02_papier_leer
+    alias: T02 – Papier leer
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.t02_papier_fehlt
+        to: "on"
+    actions:
+      - action: notify.mobile_app_mein_handy
+        data:
+          title: "Drucker: Papier leer"
+          message: "Im T02 ist keine Papierrolle mehr."
+
+  # Status kurz vor dem Morgendruck auffrischen (optional)
+  - id: t02_status_vor_morgendruck
+    alias: T02 – Status vor Morgendruck
+    triggers:
+      - trigger: time
+        at: "06:15:00"
+    actions:
+      - action: phomemo_t02.update_status

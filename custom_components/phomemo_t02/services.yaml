@@ -1,0 +1,195 @@
+print_calendar:
+  name: Kalender drucken
+  description: Druckt die Termine eines Tages aus einem oder mehreren Kalendern.
+  fields:
+    entity_id:
+      name: Kalender
+      required: true
+      selector:
+        entity:
+          domain: calendar
+          multiple: true
+    day_offset:
+      name: Tag
+      description: 0 = heute, 1 = morgen
+      default: 0
+      selector:
+        number:
+          min: -7
+          max: 30
+          mode: box
+    show_location:
+      name: Ort anzeigen
+      default: true
+      selector:
+        boolean: {}
+    skip_if_empty:
+      name: Nicht drucken, wenn keine Termine
+      default: false
+      selector:
+        boolean: {}
+    font_size:
+      name: Schriftgröße
+      default: 22
+      selector:
+        number:
+          min: 10
+          max: 60
+    printer:
+      name: Drucker
+      description: Nur nötig bei mehreren Druckern (Name oder MAC)
+      selector:
+        text: {}
+    stroke: &id001
+      name: Schrift kräftiger
+      description: 0 = normal, 1 = kräftiger (Standard), 2 = sehr kräftig
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 3
+    density: &id002
+      name: Druckdichte
+      description: Höher = dunkler (Standard 4)
+      default: 4
+      selector:
+        number:
+          min: 1
+          max: 15
+    preview_entity_id:
+      name: Vorschau-Kalender
+      description: Termine dieser Kalender für die nächsten Tage zusätzlich drucken
+        (z. B. Abfallkalender)
+      selector:
+        entity:
+          domain: calendar
+          multiple: true
+    preview_days:
+      name: Vorschau-Tage
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 14
+          mode: box
+print_text:
+  name: Text drucken
+  description: Druckt Text. Zeilen mit '# ' = Überschrift, '**…**' = fett, '---' =
+    Linie.
+  fields:
+    text:
+      name: Text
+      required: true
+      selector:
+        text:
+          multiline: true
+    font_size:
+      name: Schriftgröße
+      default: 22
+      selector:
+        number:
+          min: 10
+          max: 60
+    printer:
+      name: Drucker
+      selector:
+        text: {}
+    stroke: *id001
+    density: *id002
+print_image:
+  name: Bild drucken
+  description: 'Druckt ein Bild (PNG/JPG). Quelle: Datei (path), Base64-Text (image_base64,
+    z. B. vom iPhone-Kurzbefehl) oder Web-Adresse (url).'
+  fields:
+    path:
+      name: Pfad
+      required: false
+      selector:
+        text: {}
+      description: z. B. /config/www/foto.jpg
+    image_base64:
+      name: Bild als Base64
+      description: Bilddaten als Base64-Text (für Kurzbefehle/REST-API)
+      selector:
+        text:
+          multiline: true
+    url:
+      name: Bild-URL
+      description: z. B. Kamerabild oder Web-Adresse
+      selector:
+        text:
+          type: url
+    printer:
+      name: Drucker
+      selector:
+        text: {}
+    density: *id002
+    rotate:
+      name: Drehen
+      description: auto = Querformat um 90° drehen (größerer Druck)
+      default: auto
+      selector:
+        select:
+          options:
+          - value: auto
+            label: automatisch
+          - value: always
+            label: immer
+          - value: never
+            label: nie
+    dither:
+      name: Raster
+      description: atkinson = Fotos, floyd = feiner/dunkler, none = Grafiken und Text
+      default: atkinson
+      selector:
+        select:
+          options:
+          - value: atkinson
+            label: Atkinson (Fotos)
+          - value: floyd
+            label: Floyd-Steinberg
+          - value: none
+            label: ohne (Grafik)
+feed:
+  name: Papiervorschub
+  fields:
+    lines:
+      name: Pixelzeilen
+      default: 40
+      selector:
+        number:
+          min: 1
+          max: 255
+    printer:
+      name: Drucker
+      selector:
+        text: {}
+density_test:
+  name: Dichte-Test
+  description: Druckt kurze Muster mit verschiedenen Dichtestufen untereinander.
+  fields:
+    levels:
+      name: Stufen
+      default:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 8
+      selector:
+        object: {}
+    printer:
+      name: Drucker
+      selector:
+        text: {}
+update_status:
+  name: Status abfragen
+  description: Liest Akkustand und Papierstatus sofort (sonst alle 6 Stunden und nach
+    jedem Druck).
+  fields:
+    printer:
+      name: Drucker
+      selector:
+        text: {}
