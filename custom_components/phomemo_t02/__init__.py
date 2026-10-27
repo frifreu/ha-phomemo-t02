@@ -14,9 +14,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_call_later
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -94,7 +95,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         job = await hass.async_add_executor_job(render.build_job, img, 4, density)
         await prn.send(job, img.height)
         if prn.coordinator is not None:  # nach dem Druck Status auffrischen
-            hass.async_create_task(prn.coordinator.async_request_refresh())
+            # Nicht sofort: direkt nach dem Druck lehnt der T02 Statusabfragen oft ab
+            coordinator = prn.coordinator
+
+            @callback
+            def _refresh_later(_now) -> None:
+                hass.async_create_task(coordinator.async_request_refresh())
+
+            async_call_later(hass, 15, _refresh_later)
 
     async def print_text(call: ServiceCall) -> None:
         img = await hass.async_add_executor_job(render.render_text, call.data["text"], call.data["font_size"], call.data["stroke"])

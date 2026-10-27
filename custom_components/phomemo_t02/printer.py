@@ -150,13 +150,22 @@ class T02Printer:
                     replies[data[1]] = bytes(data[2:])
                     got.set()
 
-            client = await self._connect(device, max_attempts=2)
-            try:
+            client = None
+            for attempt in (1, 2):
+                client = await self._connect(device, max_attempts=2)
                 try:
                     await client.start_notify(NOTIFY_UUID, on_notify)
+                    break
                 except BleakError as err:
-                    _LOGGER.warning("%s lehnt Statusmeldungen ab (%s)", self.name, err)
-                    return None
+                    # Direkt nach einer Verbindung lehnt der T02 manchmal ab
+                    # ("Insufficient authentication") – kurz warten, neu verbinden.
+                    await client.disconnect()
+                    if attempt == 2:
+                        _LOGGER.warning("%s lehnt Statusmeldungen ab (%s)", self.name, err)
+                        return None
+                    _LOGGER.debug("Statusmeldungen abgelehnt (%s), neuer Versuch in 5 s", err)
+                    await asyncio.sleep(5)
+            try:
                 await asyncio.sleep(1)  # Begrüßungsmeldungen des Druckers abwarten
                 char = self._find_write_char(client)
                 for code in (0x08, 0x11, 0x12, 0x07, 0x09):
