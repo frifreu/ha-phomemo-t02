@@ -1,7 +1,6 @@
 # Phomemo T02 Mini-Drucker für Home Assistant
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
-[![Version](https://img.shields.io/github/v/release/frifreu/ha-phomemo-t02)](https://github.com/frifreu/ha-phomemo-t02/releases)
 
 Eigene Integration für den kleinen Thermodrucker **T02** (Phomemo und baugleiche Nachbauten,
 53-mm-Papier). Druckt jeden Morgen deine Termine, Abfuhrtermine, freien Text oder Bilder.
@@ -71,12 +70,12 @@ Oder von Hand:
 3. **Phomemo T02 Mini-Drucker** suchen und herunterladen
 4. Home Assistant **neu starten**
 
-Spätere Versionen zeigt HACS automatisch als Update an.
+Neue Stände auf GitHub zeigt HACS automatisch als Update an (sofort über *HACS → ⋮ → Nach Updates suchen*).
 
 ### Variante B: manuell aus der ZIP-Datei
 
 Die ZIP-Datei gibt es auf GitHub unter **Code → Download ZIP** (Ordner heißt dann
-`ha-phomemo-t02-main`) oder bei den [Releases](https://github.com/frifreu/ha-phomemo-t02/releases).
+`ha-phomemo-t02-main`).
 
 Der Ordner `custom_components/phomemo_t02` muss nach `/config/custom_components/phomemo_t02`.
 Am einfachsten geht das so:
