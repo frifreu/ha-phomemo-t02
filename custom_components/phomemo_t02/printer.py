@@ -157,8 +157,15 @@ class T02Printer:
                     await client.start_notify(NOTIFY_UUID, on_notify)
                     break
                 except BleakError as err:
-                    # Direkt nach einer Verbindung lehnt der T02 manchmal ab
-                    # ("Insufficient authentication") – kurz warten, neu verbinden.
+                    # Der T02 gibt Statusmeldungen teils nur über eine gekoppelte
+                    # (verschlüsselte) Verbindung heraus: "Insufficient authentication".
+                    if "authentication" in str(err).lower() or "encryption" in str(err).lower():
+                        if await self._try_pair(client):
+                            try:
+                                await client.start_notify(NOTIFY_UUID, on_notify)
+                                break
+                            except BleakError as err2:
+                                err = err2
                     await client.disconnect()
                     if attempt == 2:
                         _LOGGER.warning("%s lehnt Statusmeldungen ab (%s)", self.name, err)
@@ -200,6 +207,18 @@ class T02Printer:
             return None
         _LOGGER.debug("%s Status: %s", self.name, status)
         return status
+
+    async def _try_pair(self, client) -> bool:
+        """Koppelt mit dem Drucker (über ESPHome-Proxy oder lokalen Adapter)."""
+        try:
+            _LOGGER.debug("%s: Kopplung wird versucht", self.name)
+            await client.pair()
+        except (BleakError, NotImplementedError, TimeoutError, asyncio.TimeoutError) as err:
+            _LOGGER.debug("%s: Kopplung nicht möglich (%s)", self.name, err)
+            return False
+        _LOGGER.info("%s: gekoppelt", self.name)
+        await asyncio.sleep(0.5)
+        return True
 
     async def _connect(self, device, max_attempts: int = 3):
         """Verbindet (bevorzugt über Proxy); Fehler werden verständlich gemeldet."""
