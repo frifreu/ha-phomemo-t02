@@ -43,4 +43,5 @@ class BatterySensor(CoordinatorEntity[StatusCoordinator], SensorEntity):
             "erreichbar": data.get("reachable"),
             "zuletzt_gelesen": data.get("updated"),
             "deckel_rohwert": f"{data['cover_raw']:02x}" if "cover_raw" in data else None,
+            "abschaltzeit_rohwert": data.get("auto_off_raw"),
         }

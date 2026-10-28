@@ -133,7 +133,8 @@ class T02Printer:
         """Liest Akku, Papier, Deckel, Firmware und Seriennummer in einer Verbindung.
 
         Antworten kommen auf ff03 als ``1a <typ> <daten>``:
-        04 Akku in %, 06 Papier (89 = da, 88 = leer), 05 Deckel, 07 Firmware, 08 Seriennummer.
+        04 Akku in %, 06 Papier (89 = da, 88 = leer), 05 Deckel, 07 Firmware, 08 Seriennummer,
+        09 Abschaltzeit.
         Gibt None zurück, wenn der Drucker nicht antwortet oder Statusmeldungen ablehnt.
         Wirft HomeAssistantError, wenn er nicht erreichbar ist.
         """
@@ -175,8 +176,8 @@ class T02Printer:
             try:
                 await asyncio.sleep(1)  # Begrüßungsmeldungen des Druckers abwarten
                 char = self._find_write_char(client)
-                for code in (0x08, 0x11, 0x12, 0x07, 0x09):
-                    expect = {0x08: 0x04, 0x11: 0x06, 0x12: 0x05, 0x07: 0x07, 0x09: 0x08}[code]
+                for code in (0x08, 0x11, 0x12, 0x07, 0x09, 0x0E):
+                    expect = {0x08: 0x04, 0x11: 0x06, 0x12: 0x05, 0x07: 0x07, 0x09: 0x08, 0x0E: 0x09}[code]
                     for _attempt in range(2):
                         if expect in replies or not client.is_connected:
                             break
@@ -200,6 +201,8 @@ class T02Printer:
             status["cover_raw"] = b[0]
         if (b := replies.get(0x07)) and len(b) >= 3:
             status["firmware"] = f"{b[0]}.{b[1]}.{b[2]}"
+        if b := replies.get(0x09):
+            status["auto_off_raw"] = b[0]  # Abschaltzeit (Einheit unbekannt, bei 0x0c ≈ 1–2 h)
         if b := replies.get(0x08):
             status["serial"] = b.decode("ascii", "replace").strip()
         if not status:
