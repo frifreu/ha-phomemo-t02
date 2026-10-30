@@ -147,8 +147,24 @@ Die fertige Vorlage liegt in `examples/morgendruck_termine.yaml`.
 Abfallkalender deshalb zusätzlich unter `preview_entity_id` ein. Dann steht auf dem Zettel ein
 Abschnitt **„Morgen“** mit der nächsten Abfuhr.
 
-**Tipp zur Stromversorgung:** Der T02 schaltet sich nach einiger Zeit ab. Für den Morgendruck sollte
-er am USB-Ladekabel hängen und eingeschaltet bleiben.
+### Wichtig: automatische Abschaltung ausstellen
+
+Ab Werk schaltet sich der T02 nach etwa 1–2 Stunden selbst ab, **auch am Netzteil**. Die grüne LED
+zeigt dabei nur den Ladezustand und leuchtet weiter. Der Morgendruck schlägt dann mit
+„nicht in Reichweite oder ausgeschaltet“ fehl. Regelmäßige Verbindungen von Home Assistant halten ihn
+**nicht** wach.
+
+Abhilfe, einmalig:
+
+1. Die App **Phomemo** auf dem Handy installieren und den Drucker verbinden.
+2. In den Druckereinstellungen die automatische Abschaltung (Abschaltzeit) auf **„Nie“** stellen.
+3. App schließen oder deinstallieren. Der Drucker nimmt nur eine Verbindung gleichzeitig an.
+
+Die Einstellung wird im Drucker gespeichert. Kontrolle: Am Sensor `sensor.t02_akku` zeigt das Attribut
+`abschaltzeit_rohwert` danach `0` (ab Werk `12`).
+
+**Akkubetrieb:** Ohne Abschaltung zieht der Drucker dauerhaft Strom. Am besten am USB-Netzteil
+betreiben oder die Akku-Warnung aus `examples/drucker_warnungen.yaml` einrichten.
 
 ### Warnungen (optional)
 
@@ -260,6 +276,7 @@ Den Token wie ein Passwort behandeln.
 | „nicht in Reichweite oder ausgeschaltet“ | Drucker an? Kein Proxy oder Adapter sieht ihn. Näher an den Proxy stellen. |
 | „keine Verbindung – Signal sehr schwach“ | RSSI zu schlecht, siehe Tabelle in Abschnitt 1 |
 | „Error 128“ / Proxy hängt | ESPHome-Proxy neu starten, Drucker aus- und einschalten |
+| Morgens „nicht in Reichweite oder ausgeschaltet“, obwohl die LED leuchtet | Drucker hat sich selbst abgeschaltet: Abschaltzeit in der Phomemo-App auf „Nie“ stellen (siehe Abschnitt 4) |
 | Akku/Papier zeigen „unbekannt“ | Seit dem Neustart noch keine erfolgreiche Abfrage: `update_status` ausführen |
 | Ausdruck blass | Papier richtig herum? (beschichtete Seite zum Druckkopf); `stroke: 1` oder `2` |
 | Ausdruck bricht mittendrin ab | Signal zu schwach; sonst in `const.py` `CHUNK_DELAY` erhöhen (z. B. `0.08`) |
