@@ -187,7 +187,7 @@ def _short(d: date) -> str:
 
 
 def _entries(day: date, calendars: dict[str, tuple[str, list[dict]]], show_location: bool,
-             show_source: bool, tz) -> list[tuple[tuple, str, str, str]]:
+             show_source: bool, tz, always_date: bool = False) -> list[tuple[tuple, str, str, str]]:
     entries = []
     for name, events in calendars.values():
         for ev in events:
@@ -195,7 +195,7 @@ def _entries(day: date, calendars: dict[str, tuple[str, list[dict]]], show_locat
             end, _ = _parse(ev.get("end", ev["start"]), tz)
             if all_day:
                 last = end - timedelta(days=1) if end > start else start  # Ende ist exklusiv
-                if start == day and last == day:
+                if start == day and last == day and not always_date:
                     when = "ganztägig"
                 elif start == last:
                     when = f"{_short(start)} ganztägig"
@@ -204,7 +204,7 @@ def _entries(day: date, calendars: dict[str, tuple[str, list[dict]]], show_locat
                 key = (max(start, day), -1)
             else:
                 sd, ed = start.date(), end.date()
-                if sd == day and ed == day:
+                if sd == day and ed == day and not always_date:
                     when = f"{start:%H:%M}–{end:%H:%M}"
                 elif sd < day:
                     when = f"bis {_short(ed) + ' ' if ed != day else ''}{end:%H:%M}"
@@ -220,6 +220,11 @@ def _entries(day: date, calendars: dict[str, tuple[str, list[dict]]], show_locat
                 extra.append(location)
             if show_source:
                 extra.append(f"[{name}]")
+            if all_day and title.startswith("★") and start == last:
+                # Geburtstag: eine fette Zeile, bei anderen Tagen mit Datum davor
+                if when != "ganztägig":
+                    title = f"{_short(start)}  {title}"
+                when, extra = "", []
             entries.append((key, when, title, " · ".join(extra)))
     entries.sort(key=lambda e: e[0])
     return entries
@@ -227,6 +232,10 @@ def _entries(day: date, calendars: dict[str, tuple[str, list[dict]]], show_locat
 
 def _append(lines: list[str], entries) -> None:
     for _, when, title, extra in entries:
+        if not when:
+            lines.append(f"**{title}**")
+            lines.append("")
+            continue
         lines.append(f"**{when}**")
         lines.append(title)
         if extra:
@@ -239,7 +248,7 @@ def _append(lines: list[str], entries) -> None:
 def format_calendar(day: date, calendars: dict[str, tuple[str, list[dict]]],
                     show_location: bool = True, empty_text: str = "Keine Termine heute.",
                     tz=None, preview: dict[str, tuple[str, list[dict]]] | None = None,
-                    preview_title: str = "Morgen") -> str:
+                    preview_title: str = "Morgen", preview_days: int = 1) -> str:
     """Baut den Drucktext aus calendar.get_events-Antworten.
 
     ``calendars``: entity_id -> (Anzeigename, Ereignisliste) für ``day``
@@ -253,7 +262,8 @@ def format_calendar(day: date, calendars: dict[str, tuple[str, list[dict]]],
     else:
         lines.append(empty_text)
     if preview:
-        upcoming = _entries(day + timedelta(days=1), preview, False, False, tz)
+        upcoming = _entries(day + timedelta(days=1), preview, False, False, tz,
+                            always_date=preview_days > 1)
         if upcoming:
             lines += ["---", f"# {preview_title}"]
             _append(lines, upcoming)

@@ -1,4 +1,4 @@
-"""Einrichtung per Bluetooth-Erkennung oder manueller MAC-Adresse."""
+"""Einrichtung: Drucker (Bluetooth/MAC) oder iCloud-Geburtstagskalender."""
 
 from __future__ import annotations
 
@@ -12,8 +12,11 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_ADDRESS, DOMAIN, SERVICE_UUID
+from .carddav import CardDavAuthError, CardDavError, ICloudBirthdays
+from .const import CONF_ADDRESS, CONF_TYPE, DOMAIN, SERVICE_UUID, TYPE_BIRTHDAYS
 
 MANUAL = "manual"
 MAC_RE = re.compile(r"^([0-9A-F]{2}:){5}[0-9A-F]{2}$")
@@ -47,6 +50,34 @@ class T02ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="confirm", description_placeholders={"name": name})
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        return self.async_show_menu(step_id="user", menu_options=["printer", "icloud"])
+
+    async def async_step_icloud(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            username = user_input[CONF_USERNAME].strip()
+            password = user_input[CONF_PASSWORD].strip()
+            await self.async_set_unique_id(f"icloud_{username.lower()}")
+            self._abort_if_unique_id_configured()
+            client = ICloudBirthdays(async_get_clientsession(self.hass), username, password)
+            try:
+                found = await client.fetch()
+            except CardDavAuthError:
+                errors["base"] = "invalid_auth"
+            except CardDavError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=f"Geburtstage ({len(found)} Kontakte)",
+                    data={CONF_TYPE: TYPE_BIRTHDAYS, CONF_USERNAME: username, CONF_PASSWORD: password},
+                )
+        return self.async_show_form(
+            step_id="icloud",
+            data_schema=vol.Schema({vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}),
+            errors=errors,
+        )
+
+    async def async_step_printer(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             if address == MANUAL:
@@ -61,7 +92,7 @@ class T02ConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered[info.address] = f"{info.name or 'T02'} ({info.address})"
         options = {**self._discovered, MANUAL: "MAC-Adresse manuell eingeben"}
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(options)})
+            step_id="printer", data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(options)})
         )
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

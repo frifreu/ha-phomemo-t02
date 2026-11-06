@@ -2,11 +2,46 @@
   "config": {
     "flow_title": "{name}",
     "step": {
-      "user": {"title": "Phomemo T02 hinzufügen", "data": {"address": "Drucker"}},
-      "manual": {"title": "MAC-Adresse", "description": "Format AA:BB:CC:DD:EE:FF", "data": {"address": "MAC-Adresse"}},
-      "confirm": {"description": "{name} einrichten?"}
+      "user": {
+        "title": "Phomemo T02",
+        "description": "Was möchtest du einrichten?",
+        "menu_options": {
+          "printer": "Drucker T02",
+          "icloud": "Geburtstagskalender aus iCloud-Kontakten"
+        }
+      },
+      "printer": {
+        "title": "Phomemo T02 hinzufügen",
+        "data": {
+          "address": "Drucker"
+        }
+      },
+      "manual": {
+        "title": "MAC-Adresse",
+        "description": "Format AA:BB:CC:DD:EE:FF",
+        "data": {
+          "address": "MAC-Adresse"
+        }
+      },
+      "confirm": {
+        "description": "{name} einrichten?"
+      },
+      "icloud": {
+        "title": "Geburtstage aus iCloud",
+        "description": "Apple-ID und ein **App-spezifisches Passwort** eingeben (nicht das normale Apple-Passwort). Erstellen unter account.apple.com → Anmeldung und Sicherheit → App-spezifische Passwörter.",
+        "data": {
+          "username": "Apple-ID (E-Mail)",
+          "password": "App-spezifisches Passwort"
+        }
+      }
     },
-    "error": {"invalid_mac": "Ungültige MAC-Adresse"},
-    "abort": {"already_configured": "Drucker ist bereits eingerichtet"}
+    "error": {
+      "invalid_mac": "Ungültige MAC-Adresse",
+      "invalid_auth": "Anmeldung abgelehnt – Apple-ID oder App-Passwort prüfen",
+      "cannot_connect": "iCloud nicht erreichbar oder keine Kontakte gefunden"
+    },
+    "abort": {
+      "already_configured": "Bereits eingerichtet"
+    }
   }
 }

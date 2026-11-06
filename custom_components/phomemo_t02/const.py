@@ -18,6 +18,8 @@ DEFAULT_DENSITY = 4          # 1f 11 02 xx – höher = dunkler
 DEFAULT_STROKE = 1           # Schrift 1 px kräftiger
 
 CONF_ADDRESS = "address"
+CONF_TYPE = "type"
+TYPE_BIRTHDAYS = "icloud_birthdays"
 
 SERVICE_PRINT_TEXT = "print_text"
 SERVICE_PRINT_IMAGE = "print_image"

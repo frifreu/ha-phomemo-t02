@@ -15,6 +15,7 @@ ohne App und ohne Cloud.
 - **Vorschau „Morgen“:** z. B. die Abfuhr von morgen, damit die Tonne abends rauskommt
 - **Text drucken:** mit Überschrift (`# …`), Fettdruck (`**…**`) und Linien (`---`)
 - **Bild drucken:** PNG/JPG, automatisch auf Druckbreite gerastert
+- **Geburtstage aus iCloud-Kontakten** als eigener Kalender, auch mit Vorschau auf die nächsten Tage
 - **Sensoren:** Akku in %, „Papier fehlt“, Firmware und Seriennummer in den Geräteinfos
 - **Einrichtung per Klick:** Der Drucker wird automatisch per Bluetooth gefunden
 
@@ -166,6 +167,32 @@ Die Einstellung wird im Drucker gespeichert. Kontrolle: Am Sensor `sensor.t02_ak
 **Akkubetrieb:** Ohne Abschaltung zieht der Drucker dauerhaft Strom. Am besten am USB-Netzteil
 betreiben oder die Akku-Warnung aus `examples/drucker_warnungen.yaml` einrichten.
 
+### Geburtstage aus den iCloud-Kontakten (optional)
+
+Die Geburtstage, die das iPhone aus den Kontakten im Kalender anzeigt, gibt Apple nicht als
+normalen Kalender heraus. Die Integration liest sie deshalb direkt aus den iCloud-Kontakten und stellt
+sie als Kalender `calendar.geburtstage` bereit (auch im Kalender von Home Assistant sichtbar).
+
+1. Ein **App-spezifisches Passwort** erstellen: [account.apple.com](https://account.apple.com) →
+   *Anmeldung und Sicherheit* → *App-spezifische Passwörter* → „+“, Name z. B. „Home Assistant“.
+   Nicht das normale Apple-Passwort verwenden.
+2. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Phomemo T02* →
+   **Geburtstagskalender aus iCloud-Kontakten**, Apple-ID und App-Passwort eingeben.
+3. Im Morgendruck-Package den Kalender eintragen, z. B. heute und als Vorschau für eine Woche:
+    ```yaml
+    entity_id:
+      - calendar.mein_kalender
+      - calendar.geburtstage
+    preview_entity_id:
+      - calendar.geburtstage
+    preview_days: 7
+    ```
+
+Auf dem Zettel steht dann z. B. **★ Anna Muster (40)**, in der Vorschau mit Datum davor. Geburtstage ohne
+Jahr erscheinen ohne Alter, der 29. Februar wird in Nicht-Schaltjahren am 28. angezeigt. Die Kontakte
+werden alle 12 Stunden neu eingelesen. Namen und Daten bleiben in Home Assistant und werden nicht ins
+Protokoll geschrieben.
+
 ### Warnungen (optional)
 
 `examples/drucker_warnungen.yaml` schickt eine Handy-Benachrichtigung bei Akku unter 20 % oder
@@ -277,6 +304,7 @@ Den Token wie ein Passwort behandeln.
 | „keine Verbindung – Signal sehr schwach“ | RSSI zu schlecht, siehe Tabelle in Abschnitt 1 |
 | „Error 128“ / Proxy hängt | ESPHome-Proxy neu starten, Drucker aus- und einschalten |
 | Morgens „nicht in Reichweite oder ausgeschaltet“, obwohl die LED leuchtet | Drucker hat sich selbst abgeschaltet: Abschaltzeit in der Phomemo-App auf „Nie“ stellen (siehe Abschnitt 4) |
+| Geburtstage: „Anmeldung abgelehnt“ | App-spezifisches Passwort verwenden, nicht das Apple-Passwort; ggf. neu erstellen |
 | Akku/Papier zeigen „unbekannt“ | Seit dem Neustart noch keine erfolgreiche Abfrage: `update_status` ausführen |
 | Ausdruck blass | Papier richtig herum? (beschichtete Seite zum Druckkopf); `stroke: 1` oder `2` |
 | Ausdruck bricht mittendrin ab | Signal zu schwach; sonst in `const.py` `CHUNK_DELAY` erhöhen (z. B. `0.08`) |

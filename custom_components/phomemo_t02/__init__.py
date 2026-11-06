@@ -13,7 +13,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,6 +25,7 @@ from homeassistant.util import dt as dt_util
 from . import render
 from .const import (
     CONF_ADDRESS,
+    CONF_TYPE,
     DEFAULT_DENSITY,
     DEFAULT_STROKE,
     DOMAIN,
@@ -32,6 +33,7 @@ from .const import (
     SERVICE_PRINT_CALENDAR,
     SERVICE_PRINT_IMAGE,
     SERVICE_PRINT_TEXT,
+    TYPE_BIRTHDAYS,
 )
 from .printer import T02Printer
 
@@ -178,6 +180,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         text = render.format_calendar(
             day, calendars, call.data["show_location"], tz=dt_util.get_default_time_zone(),
             preview=preview, preview_title="Morgen" if preview_days == 1 else "Demnächst",
+            preview_days=preview_days,
         )
         img = await hass.async_add_executor_job(render.render_text, text, call.data["font_size"], call.data["stroke"])
         await _print_image(prn, img, call.data["density"])
@@ -207,9 +210,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 PLATFORMS = ["sensor", "binary_sensor"]
+BIRTHDAY_PLATFORMS = ["calendar"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if entry.data.get(CONF_TYPE) == TYPE_BIRTHDAYS:
+        from .calendar import BirthdayCoordinator
+        from .carddav import ICloudBirthdays
+
+        client = ICloudBirthdays(
+            async_get_clientsession(hass), entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        )
+        coordinator = BirthdayCoordinator(hass, client)
+        await coordinator.async_config_entry_first_refresh()
+        entry.runtime_data = coordinator
+        await hass.config_entries.async_forward_entry_setups(entry, BIRTHDAY_PLATFORMS)
+        return True
+
     from .coordinator import StatusCoordinator
 
     printer = T02Printer(hass, entry.data[CONF_ADDRESS], entry.title)
@@ -221,6 +238,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if entry.data.get(CONF_TYPE) == TYPE_BIRTHDAYS:
+        return await hass.config_entries.async_unload_platforms(entry, BIRTHDAY_PLATFORMS)
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)

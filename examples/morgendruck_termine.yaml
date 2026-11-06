@@ -24,6 +24,7 @@ script:
           entity_id:
             - calendar.mein_kalender      # <- eigener Terminkalender
             - calendar.abfall             # <- Abfallkalender (optional)
+            # - calendar.geburtstage      # <- Geburtstage aus iCloud (optional, siehe README)
           preview_entity_id:
             - calendar.abfall             # Abfuhr von morgen extra anzeigen (optional)
           preview_days: 1
